@@ -217,10 +217,10 @@ class VegET:
         melt_rate = melt_factor * ((tmax * tmax) - (tmax * tmin))
         # initialize the snow melt factor array
         snow_melt_fac = np.zeros(ppt.shape)
-        # where avg temp <= high_threshold_temp set to 0, else it is equal to the melt factor rate
-        # (tavg <= rf_high_tresh_temp, 0, melt_rate)
-        snow_melt_fac[tavg <=rf_high_thresh_temp] = melt_rate[tavg <= rf_high_thresh_temp]
-        snow_melt_fac[tavg > rf_high_thresh_temp] = 0
+        # where avg temp <= low_threshold_temp set to 0, else it is equal to the melt factor rate
+        # (tavg <= 0, 0, melt_rate)
+        snow_melt_fac[tavg > rf_low_thresh_temp] = melt_rate[tavg > rf_low_thresh_temp]
+        snow_melt_fac[tavg <= rf_low_thresh_temp] = 0
 
         print('iii', i)
         self.log.info('iii', i)
