@@ -212,7 +212,9 @@ class VegET:
         # Snow pack
         # Usage: Creates a melt rate value based on the relationship between
         # max and min air temperature to determine the snow melt and from there the snow pack extent
-        melt_rate = melt_factor * ((tmax * tmax) - (tmax - tmin))
+        # set tmin to 0 if negative temperature so there will be no negative snow melt
+        tmin[tmin < 0] = 0
+        melt_rate = melt_factor * ((tmax * tmax) - (tmax * tmin))
         # initialize the snow melt factor array
         snow_melt_fac = np.zeros(ppt.shape)
         # where avg temp <= high_threshold_temp set to 0, else it is equal to the melt factor rate
