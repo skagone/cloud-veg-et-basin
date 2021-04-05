@@ -596,7 +596,7 @@ class VegET:
 
         # Open static inputs and normalize them to standard numpy arrays
 
-        # static inputs
+        # static inputs - getting them for the first time.
         self.interception = self.pmanager.get_static_data(self.interception_settings)
         self.whc = self.pmanager.get_static_data(self.whc_settings)
         self.field_capacity = self.pmanager.get_static_data(self.field_capacity_settings)
@@ -638,7 +638,7 @@ class VegET:
             today = start_dt + timedelta(days=i)
             if i == 0:
 
-                rain, intercept, swf, snwpck, swe, DDrain, SRf, etc, etasw, netet = self._run_water_bal(i, today, self.intercept, self.whc, self.field_capacity,
+                rain, intercept, swf, snwpck, swe, DDrain, SRf, etc, etasw, netet = self._run_water_bal(i, today, self.interception, self.whc, self.field_capacity,
                                                                       self.saturation, self.rf_coeff, self.k_factor,
                                                                       self.ndvi_factor, self.water_factor, self.bias_corr,
                                                                       self.alfa_factor, self.watermask,
