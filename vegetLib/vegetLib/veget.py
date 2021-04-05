@@ -690,7 +690,7 @@ class VegET:
 
                 print('output monthly is {} and output yearly is {}'.format(output_monthly_arr, output_yearly_arr))
 
-                rain, intercept, swf, snwpck, swe, DDrain, SRf, etc, etasw, netet = self._run_water_bal(i, today, self.intercept, self.whc,
+                rain, intercept, swf, snwpck, swe, DDrain, SRf, etc, etasw, netet = self._run_water_bal(i, today, self.interception, self.whc,
                                                                       self.field_capacity, self.saturation,
                                                                       self.rf_coeff, self.k_factor, self.ndvi_factor,
                                                                       self.water_factor, self.bias_corr, self.alfa_factor,
