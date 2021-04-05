@@ -621,6 +621,7 @@ class VegET:
         netet_month_cum_arr = np.zeros(model_arr_shape)
         # yearly
         rain_yearly_cum_arr = np.zeros(model_arr_shape)
+        intercept_yearly_cum_arr = np.zeros(model_arr_shape)
         swe_yearly_cum_arr = np.zeros(model_arr_shape)
         et_yearly_cum_arr = np.zeros(model_arr_shape)
         dd_yearly_cum_arr = np.zeros(model_arr_shape)
@@ -636,6 +637,7 @@ class VegET:
             t0 = t_now()
             today = start_dt + timedelta(days=i)
             if i == 0:
+
                 rain, intercept, swf, snwpck, swe, DDrain, SRf, etc, etasw, netet = self._run_water_bal(i, today, self.intercept, self.whc, self.field_capacity,
                                                                       self.saturation, self.rf_coeff, self.k_factor,
                                                                       self.ndvi_factor, self.water_factor, self.bias_corr,
@@ -643,8 +645,27 @@ class VegET:
                                                                       outdir=self.outdir, yest_snwpck=None, yest_swf=None,
                                                                       geoproperties_file=self.geoproperties_file, 
                                                                       daily_mode=output_daily_arr)
+
+                # Added monthly/annual accumulatatives for the first day..the first day is otherwise left out
+                # monthly
+                et_month_cum_arr += etasw
+                dd_month_cum_arr += DDrain
+                srf_month_cum_arr += SRf
+                etc_month_cum_arr += etc
+                netet_month_cum_arr += netet
+                # yearly
+                rain_yearly_cum_arr += rain
+                intercept_yearly_cum_arr += intercept
+                swe_yearly_cum_arr += swe
+                et_yearly_cum_arr += etasw
+                dd_yearly_cum_arr += DDrain
+                srf_yearly_cum_arr += SRf
+                etc_yearly_cum_arr += etc
+                netet_yearly_cum_arr += netet
+
                 changing_swf = swf
                 changing_snwpck = snwpck
+
 
             else:
 
@@ -669,7 +690,7 @@ class VegET:
 
                 print('output monthly is {} and output yearly is {}'.format(output_monthly_arr, output_yearly_arr))
 
-                rain, swf, snwpck, swe, DDrain, SRf, etc, etasw, netet = self._run_water_bal(i, today, self.intercept, self.whc,
+                rain, intercept, swf, snwpck, swe, DDrain, SRf, etc, etasw, netet = self._run_water_bal(i, today, self.intercept, self.whc,
                                                                       self.field_capacity, self.saturation,
                                                                       self.rf_coeff, self.k_factor, self.ndvi_factor,
                                                                       self.water_factor, self.bias_corr, self.alfa_factor,
@@ -685,6 +706,7 @@ class VegET:
                 netet_month_cum_arr += netet
                 # yearly
                 rain_yearly_cum_arr += rain
+                intercept_yearly_cum_arr += intercept
                 swe_yearly_cum_arr += swe
                 et_yearly_cum_arr += etasw
                 dd_yearly_cum_arr += DDrain
