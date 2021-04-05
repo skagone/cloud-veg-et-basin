@@ -206,8 +206,8 @@ class VegET:
         # Effective precipitation
         effppt = ppt * (1 - (interception / 100.0))
         # Intercepted precipitation
-        interception = ppt * (interception / 100.0)
-        #print('interception min', np.min(interception))
+        intercept = ppt * (interception / 100.0)
+
 
         # Snow pack
         # Usage: Creates a melt rate value based on the relationship between
@@ -222,8 +222,8 @@ class VegET:
         snow_melt_fac[tavg > rf_low_thresh_temp] = melt_rate[tavg > rf_low_thresh_temp]
         snow_melt_fac[tavg <= rf_low_thresh_temp] = 0
 
-        print('iii', i)
-        self.log.info('iii', {i})
+        print(f'iii', i)
+        self.log.info(f'iii', {i})
 
         if i == 0:  # first day of model run to initalize and establish the soil water balance
             print('does the first day happen?')
@@ -242,9 +242,15 @@ class VegET:
             SNWpk = np.zeros(ppt.shape)  # inital snowpack raster with only 0 values
             SWi = (self.whc * 0.5) + effppt + snow_melt
             SWi[SWi < 0] = np.nan
-            print(SWi, SNWpk, RAIN, SWE, snow_melt)
+            print(SWi, SNWpk, RAIN, intercept, SWE, snow_melt)
+            self.log.info(f'SWi {SWi}, /n'
+                          f'Snowpack {SNWpk}, /n'
+                          f'RAIN {RAIN}, /n'
+                          f'Intercepted RAIN {intercept}, /n'
+                          f'SWE {SWE}, /n'
+                          f'snowmelt {snow_melt}')
 
-            return SWi, SNWpk, RAIN, SWE, snow_melt
+            return SWi, SNWpk, RAIN, intercept, SWE, snow_melt
 
         else:
             rain_frac = np.zeros(ppt.shape)  # initialize the rain fraction array
@@ -260,7 +266,7 @@ class VegET:
 
             RAIN = rain_frac * effppt
             SWE = (1 - rain_frac) * effppt
-            self.log.info(f"SWE {SWE},RAIN {RAIN}")
+            self.log.info(f' SWE {SWE},RAIN {RAIN}, Intercepted RAIN {intercept}')
 
             # snow melt
             snow_melt = np.zeros(ppt.shape)
@@ -290,7 +296,17 @@ class VegET:
             # initial soil water balance = yesterday's soil water balance + Rain + snow melt
             SWi = yest_swf + RAIN + snow_melt
 
-            return SWi, SNWpk, RAIN, SWE, snow_melt
+            self.log.info(f'SWi {SWi}, /n'
+                          f'Snowpack {SNWpk}, /n'
+                          f'snowmelt {snow_melt}, /n'
+                          f'SWE {SWE}, /n'
+                          f'RAIN {RAIN}, /n'
+                          f'Intercepted RAIN {intercept}, /n'
+                          f'rain frac {rain_frac}, /n'
+                          f'effppt {effppt}, /n'
+                          f'1-rain frac {1-rain_frac} ')
+
+            return SWi, SNWpk, RAIN, intercept, SWE, snow_melt
 
     def _surface_runoff(self, SWi, saturation, field_capacity, whc, rf_coeff, geo_dict=None):
         """
@@ -396,7 +412,7 @@ class VegET:
         neg_ndvi_boolean = ndvi < 0
 
         # put the final etasw values for where there is land (no water)
-        etasw[~etawater_boolean] = etasw5[~etawater_boolean ]
+        etasw[~etawater_boolean] = etasw5[~etawater_boolean]
 
         # else make it ETo*water_var
         etasw[etawater_boolean | neg_ndvi_boolean] = pet[etawater_boolean | neg_ndvi_boolean] * water_var
@@ -443,7 +459,7 @@ class VegET:
         self.tmin, self.tmin_scale = self.pmanager.get_dynamic_data(today, self.tmin_settings)
         self.tmax, self.tmax_scale = self.pmanager.get_dynamic_data(today, self.tmax_settings)
 
-        self.log.info(f'SCales in order \n {self.ndvi_scale}, {self.pet_scale},'
+        self.log.info(f'Scales in order \n {self.ndvi_scale}, {self.pet_scale},'
                       f' {self.tavg_scale}, {self.tmin_scale}, {self.tmax_scale}')
 
         if daily_mode:
@@ -480,10 +496,9 @@ class VegET:
         #     self.rmanager.scale_rasters(numpys=npys, scalefactors=scales)
 
         # ====== Call the functions ======
-        # output SWi and SNWpk
-        #         RAIN, SWf, SNWpk, SWE, DDrain, SRf, etc, etasw, netet
+        # output SWi and SNWpk, RAIN, intercept, SWf, SNWpk, SWE, DDrain, SRf, etc, etasw, netet
         print('IV', i)
-        SWi, SNWpk, RAIN, SWE, snow_melt = self._soil_water(i, self.ppt, interception, self.tmin, self.tmax, self.tavg,
+        SWi, SNWpk, RAIN, intercept, SWE, snow_melt = self._soil_water(i, self.ppt, interception, self.tmin, self.tmax, self.tavg,
                                                             self.melt_factor, self.rf_high_thresh_temp, self.rf_low_thresh_temp,
                                                             yest_swf, yest_snwpck)
         DOY, year = self._day_of_year(today=today)
@@ -492,6 +507,7 @@ class VegET:
         print('swout', SWiout)
         SNWpkout = f'snwpk_{year}{DOY}.tif'
         RAINout = f'rain_{year}{DOY}.tif'
+        INTERCEPTout = f'intercept_{year}{DOY}.tif'
         SWEout = f'swe_{year}{DOY}.tif'
         snow_meltout = f'snowmelt_{year}{DOY}.tif'
 
@@ -500,12 +516,14 @@ class VegET:
                 self.rmanager.output_rasters_cloud(SWi, outname=f'{today.year}/{SWiout}')
                 self.rmanager.output_rasters_cloud(SNWpk, outname=f'{today.year}/{SNWpkout}')
                 self.rmanager.output_rasters_cloud(RAIN, outname=f'{today.year}/{RAINout}')
+                self.rmanager.output_rasters_cloud(intercept, outname=f'{today.year}/{INTERCEPTout}')
                 self.rmanager.output_rasters_cloud(SWE, outname=f'{today.year}/{SWEout}')
                 self.rmanager.output_rasters_cloud(snow_melt, outname=f'{today.year}/{snow_meltout}')
             else:
                 self.rmanager.output_rasters(SWi, self.daypath, outname=SWiout)
                 self.rmanager.output_rasters(SNWpk, self.daypath, outname=SNWpkout)
                 self.rmanager.output_rasters(RAIN, self.daypath, outname=RAINout)
+                self.rmanager.output_rasters(intercept, self.daypath, outname=INTERCEPTout)
                 self.rmanager.output_rasters(SWE, self.daypath, outname=SWEout)
                 self.rmanager.output_rasters(snow_melt, self.daypath, outname=snow_meltout)
 
@@ -545,7 +563,7 @@ class VegET:
                 self.rmanager.output_rasters(etc, self.daypath, outname=etcout)
                 self.rmanager.output_rasters(netet, self.daypath, outname=netetout)
 
-        return RAIN, SWf, SNWpk, SWE, DDrain, SRf, etc, etasw, netet
+        return RAIN, intercept, SWf, SNWpk, SWE, DDrain, SRf, etc, etasw, netet
 
 
     def run_veg_et(self):
@@ -594,7 +612,7 @@ class VegET:
         # set monthly and yearly cumulative arrays (use one of the numpys from the
         # static array that has been normalized):
         model_arr_shape = self.interception.shape
-        # A total of six output arrays must be instantiated in case accumulate_mode != None
+        # A total of six output arrays must be interception instantiated in case accumulate_mode != None
         # monthly
         et_month_cum_arr = np.zeros(model_arr_shape)
         dd_month_cum_arr = np.zeros(model_arr_shape)
@@ -618,7 +636,7 @@ class VegET:
             t0 = t_now()
             today = start_dt + timedelta(days=i)
             if i == 0:
-                rain, swf, snwpck, swe, DDrain, SRf, etc, etasw, netet = self._run_water_bal(i, today, self.interception, self.whc, self.field_capacity,
+                rain, intercept, swf, snwpck, swe, DDrain, SRf, etc, etasw, netet = self._run_water_bal(i, today, self.intercept, self.whc, self.field_capacity,
                                                                       self.saturation, self.rf_coeff, self.k_factor,
                                                                       self.ndvi_factor, self.water_factor, self.bias_corr,
                                                                       self.alfa_factor, self.watermask,
@@ -651,7 +669,7 @@ class VegET:
 
                 print('output monthly is {} and output yearly is {}'.format(output_monthly_arr, output_yearly_arr))
 
-                rain, swf, snwpck, swe, DDrain, SRf, etc, etasw, netet = self._run_water_bal(i, today, self.interception, self.whc,
+                rain, swf, snwpck, swe, DDrain, SRf, etc, etasw, netet = self._run_water_bal(i, today, self.intercept, self.whc,
                                                                       self.field_capacity, self.saturation,
                                                                       self.rf_coeff, self.k_factor, self.ndvi_factor,
                                                                       self.water_factor, self.bias_corr, self.alfa_factor,
