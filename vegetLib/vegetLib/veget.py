@@ -222,8 +222,8 @@ class VegET:
         snow_melt_fac[tavg > rf_low_thresh_temp] = melt_rate[tavg > rf_low_thresh_temp]
         snow_melt_fac[tavg <= rf_low_thresh_temp] = 0
 
-        print(f'iii', i)
-        self.log.info(f'iii', {i})
+        #print(f'iii', i)
+        self.log.info(f'iii, {i}')
 
         if i == 0:  # first day of model run to initalize and establish the soil water balance
             print('does the first day happen?')
