@@ -7,16 +7,6 @@ import calendar
 from datetime import datetime, timedelta, date
 from timeit import default_timer as t_now
 
-# from .vegconfig import return_veget_params
-# from .rastermanager import RasterManager
-# from .pathmanager import PathManager
-# from .log_logger import log_make_logger
-## --- local run
-# from veget.vegetLib.vegetLib.vegconfig import return_veget_params
-# from veget.vegetLib.vegetLib.rastermanager import RasterManager
-# from veget.vegetLib.vegetLib.pathmanager import PathManager
-# from veget.vegetLib.vegetLib.log_logger import log_make_logger
-
 from .vegconfig import return_veget_params
 from .vegconfig import s3_save_config_files
 from .rastermanager import RasterManager
